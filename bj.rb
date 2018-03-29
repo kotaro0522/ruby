@@ -13,13 +13,7 @@ class HandOfCards
 		@hand = Array.new
 	end
 
-	def deck
-		@deck
-	end
-
-	def hand
-		@hand
-	end
+	attr_reader :deck, :hand
 
 	def draw_a_card
 		card = @deck.sample
@@ -77,10 +71,29 @@ class HandOfCards
 
 end
 
+class Dealer < HandOfCards
+	def show_first_hand
+		show_hand([@hand[0], '?'])
+	end
+end
+
+class Player < HandOfCards
+	attr_accessor :bet
+
+	def win
+		return @bet
+	end
+
+	def win_bj
+		return (@bet * 1.5).floor
+	end
+end	
+
 deck_number = 6
 deck = initializer_deck(deck_number)
 
 tip = 100
+
 puts '----------'
 puts 'BLACK JACK'
 puts '----------'
@@ -96,7 +109,7 @@ loop do
 	puts
 	puts 'Next Game [Enter]'
 	gets
-
+	
 	puts 'Your tip: ' + tip.to_s
 	puts 'How much do you want to bet?'
 
@@ -104,11 +117,10 @@ loop do
 		puts 'Please input again.'
 	end
 
-	bet = input
-	tip -= bet
-	
-	player = HandOfCards.new(deck)
-	dealer = HandOfCards.new(deck)
+	player = Player.new(deck)
+	dealer = Dealer.new(deck)
+
+	player.bet = input
 
 	player.draw_a_card
 	dealer.draw_a_card
@@ -121,7 +133,7 @@ loop do
 		puts 'Dealer Black Jack!'
 	else
 		print 'dealer hand: '
-		puts dealer.show_hand([dealer.hand[0], '?'])
+		puts dealer.show_first_hand
 	end
 
 	print 'player hand: '
@@ -133,14 +145,14 @@ loop do
 
 	if dealer.evaluate_hand == 'BJ' && player.evaluate_hand == 'BJ' then
 		puts 'Draw'
-		tip += bet
 		next	
 	elsif dealer.evaluate_hand == 'BJ' then
 		puts 'Dealer wins...'
+		tip -= player.bet
 		next
 	elsif player.evaluate_hand == 'BJ' then
 		puts 'Player wins!'
-		tip += (bet * 2.5).floor
+		tip += player.win_bj
 		next
 	end
 	
@@ -157,17 +169,18 @@ loop do
 				puts player.show_hand
 				puts 'Player Black Jack!'
 				puts 'Player wins!'
-				tip += bet * 2
+				tip += player.win
 				break
 			elsif player.evaluate_hand == 'Bust' then
 				print 'player hand: '
 				puts player.show_hand
 				puts 'Player Bust!'
 				puts 'Dealer wins...'
+				tip -= player.bet
 				break
 			end
 			print 'dealer hand: '
-			puts dealer.show_hand([dealer.hand[0], '?'])
+			puts dealer.show_first_hand
 			print 'player hand: '
 			puts player.show_hand
 			puts 'player total is ' + player.evaluate_hand.to_s
@@ -179,23 +192,24 @@ loop do
 				if dealer.evaluate_hand == 'BJ' then
 					puts 'Dealer Black Jack!'
 					puts 'Dealer wins...'
+					tip -= player.bet
 					break
 				elsif dealer.evaluate_hand == 'Bust' then
 					puts 'Dealer Bust!'
 					puts 'Player wins!'
-					tip += bet * 2
+					tip += player.win
 					break
 				else
 					if dealer.evaluate_hand[-1] > 16 then
 						puts 'dealer total is ' + dealer.evaluate_hand[-1].to_s
 						if player.evaluate_hand[-1] > dealer.evaluate_hand[-1] then
 							puts 'Player wins!'
-							tip += bet * 2
+							tip += player.win
 						elsif player.evaluate_hand[-1] < dealer.evaluate_hand[-1] then
 							puts 'Dealer wins...'
+							tip -= player.bet
 						else
 							puts 'Draw'
-							tip += bet
 						end
 						break
 					end
