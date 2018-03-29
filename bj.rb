@@ -55,67 +55,30 @@ class HandOfCards
 			return total
 		end
 	end
-
-end
-
-def evaluate_hand(hand)
-	total = [0,0] 
-	hand.each{|card|
-		if card > 10 then
-			total[0] += 10
-			total[1] += 10
-		elsif card == 1 then
-			total[0] += card
-			if total[1] + 11 < 22 then
-				total[1] += 11
+	
+	def show_hand(hand=@hand)
+		print '[' 
+		hand.map {|card|
+			case card
+			when 1 then
+				print 'A, '
+			when 11 then
+				print 'J, '
+			when 12 then
+				print 'Q, '
+			when 13 then
+				print 'K, '
 			else
-				total[1] += card
+				print card.to_s + ', '
 			end
-		else
-			total[0] += card
-			total[1] += card
-		end
-	}
-	if total[0] > 21 then
-		return 'Bust'
-	elsif total.find_index(21) != nil then
-		return 'BJ'
-	elsif total[0] == total[1] || total[1] > 21 then
-		return [total[0]]
-	else
-		return total
+		}
+		print ']'
 	end
+
 end
 
-def replace_picture(hand)
-	print '[' 
-	hand.map {|card|
-		case card
-		when 1 then
-			print 'A, '
-		when 11 then
-			print 'J, '
-		when 12 then
-			print 'Q, '
-		when 13 then
-			print 'K, '
-		else
-			print card.to_s + ', '
-		end
-	}
-	print ']'
-end
-
-deck_number = 3
+deck_number = 6
 deck = initializer_deck(deck_number)
-
-test_my_hand = HandOfCards.new(deck)
-test_my_hand.draw_a_card
-test_my_hand.draw_a_card
-print test_my_hand.hand
-puts
-print test_my_hand.evaluate_hand
-
 
 tip = 100
 puts '----------'
@@ -154,15 +117,15 @@ loop do
 	
 	if dealer.evaluate_hand == 'BJ' then
 		print 'dealer hand: '
-		puts replace_picture(dealer.hand)	
+		puts dealer.show_hand	
 		puts 'Dealer Black Jack!'
 	else
 		print 'dealer hand: '
-		puts replace_picture([dealer.hand[0], '?'])
+		puts dealer.show_hand([dealer.hand[0], '?'])
 	end
 
 	print 'player hand: '
-	puts replace_picture(player.hand)
+	puts player.show_hand
 
 	if player.evaluate_hand == 'BJ' then
 		puts 'Player Black Jack!'
@@ -191,27 +154,27 @@ loop do
 			player.draw_a_card
 			if player.evaluate_hand == 'BJ' then
 				print 'player hand: '
-				puts replace_picture(player.hand)
+				puts player.show_hand
 				puts 'Player Black Jack!'
 				puts 'Player wins!'
 				tip += bet * 2
 				break
 			elsif player.evaluate_hand == 'Bust' then
 				print 'player hand: '
-				puts replace_picture(player.hand)
+				puts player.show_hand
 				puts 'Player Bust!'
 				puts 'Dealer wins...'
 				break
 			end
 			print 'dealer hand: '
-			puts replace_picture([dealer.hand[0], '?'])
+			puts dealer.show_hand([dealer.hand[0], '?'])
 			print 'player hand: '
-			puts replace_picture(player.hand)
+			puts player.show_hand
 			puts 'player total is ' + player.evaluate_hand.to_s
 			puts
 		elsif input == 's' then
 			print 'dealer hand: '
-			puts replace_picture(dealer.hand)
+			puts dealer.show_hand
 			loop do
 				if dealer.evaluate_hand == 'BJ' then
 					puts 'Dealer Black Jack!'
@@ -239,7 +202,7 @@ loop do
 				end
 				dealer.draw_a_card
 				print 'dealer hand: '
-				puts replace_picture(dealer.hand)
+				puts dealer.show_hand
 			end
 			break
 		else
