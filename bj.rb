@@ -8,16 +8,24 @@ def initializer_deck(deck_number)
 end
 
 class HandOfCards
-	def initialize(deck)
-		@deck = deck
+	def initialize
+		@@deck = Array.new
 		@hand = Array.new
+	end
+
+	def put_deck
+		print @@deck
 	end
 
 	attr_reader :deck, :hand
 
+	def refresh_hand
+		@hand = Array.new
+	end
+
 	def draw_a_card
-		card = @deck.sample
-		@deck.delete_at(@deck.find_index(card))
+		card = @@deck.sample
+		@@deck.delete_at(@@deck.find_index(card))
 		@hand.push(card)
 	end
 
@@ -67,6 +75,15 @@ class HandOfCards
 end
 
 class Dealer < HandOfCards
+	def deck
+		@@deck
+	end
+
+	def initializer_deck(deck_number)
+		card_list = [*(1..13)]
+		@@deck = card_list * 4 * deck_number
+	end
+
 	def show_first_hand
 		show_hand([@hand[0], '?'])
 	end
@@ -89,7 +106,6 @@ HIT = 'h'
 STAND = 's'
 
 deck_number = 6
-deck = initializer_deck(deck_number)
 
 tip = 100
 
@@ -97,13 +113,21 @@ puts '----------'
 puts 'BLACK JACK'
 puts '----------'
 
+player = Player.new()
+dealer = Dealer.new()
+dealer.initializer_deck(deck_number)
+
 loop do
 	if tip < 1 then
 		puts 'Bankrupt!'
 		break
-	elsif deck.size < 100 then
-		deck = initializer_deck(deck_number)
+	elsif dealer.deck.size < 100 then
+		dealer.initializer_deck(deck_number)
 	end
+
+	player.put_deck
+	puts
+	dealer.put_deck
 
 	puts
 	puts 'Next Game [Enter]'
@@ -116,8 +140,8 @@ loop do
 		puts 'Please input again.'
 	end
 
-	player = Player.new(deck)
-	dealer = Dealer.new(deck)
+	player.refresh_hand
+	dealer.refresh_hand
 
 	player.bet = input
 
