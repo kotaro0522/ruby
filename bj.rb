@@ -1,12 +1,6 @@
 # STDOUT is not put immediately without a code below
 STDOUT.sync = true
 
-def initializer_deck(deck_number)
-  card_list = [*(1..13)]
-  deck = card_list * 4 * deck_number
-  return deck
-end
-
 class HandOfCards
   def initialize
     @@deck = Array.new
@@ -124,10 +118,6 @@ loop do
   elsif dealer.deck.size < 100 then
     dealer.initializer_deck(deck_number)
   end
-
-  player.put_deck
-  puts
-  dealer.put_deck
 
   puts
   puts 'Next Game [Enter]'
