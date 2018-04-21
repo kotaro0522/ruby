@@ -8,7 +8,7 @@ puts "hello, #{input}!"
 #test_array = [1,3,5]
 #
 #if test_array.find_index(1) == nil then
-#	puts 'nil'
+#  puts 'nil'
 #else
-#	puts 'yes'
+#  puts 'yes'
 #end
