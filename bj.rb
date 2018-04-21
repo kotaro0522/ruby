@@ -2,211 +2,231 @@
 STDOUT.sync = true
 
 def initializer_deck(deck_number)
-	card_list = [*(1..13)]
-	deck = card_list * 4 * deck_number
-	return deck
+  card_list = [*(1..13)]
+  deck = card_list * 4 * deck_number
+  return deck
 end
 
 class HandOfCards
-	def initialize(deck)
-		@deck = deck
-	end
+  def initialize
+    @@deck = Array.new
+    @hand = Array.new
+  end
 
-	def show_deck
-		puts @deck
-	end
+  def put_deck
+    print @@deck
+  end
+
+  attr_reader :deck, :hand
+
+  def refresh_hand
+    @hand = Array.new
+  end
+
+  def draw_a_card
+    card = @@deck.sample
+    @@deck.delete_at(@@deck.find_index(card))
+    @hand.push(card)
+  end
+
+  def evaluate_hand
+    total = [0,0] 
+    @hand.each{|card|
+      if card > 10 then
+        total.map! {|value| value += 10 }
+      elsif card == 1 then
+        total[0] += card
+        total[1] += (total[1] + 11) <= BJ ? 11 : card
+      else
+        total.map! {|value| value += card }
+      end
+    }
+
+    if total[0] > BJ then
+      return 'Bust'
+    elsif total.find_index(BJ) != nil then
+      return [BJ]
+    elsif total[0] == total[1] or total[1] > BJ then
+      return [total[0]]
+    else
+      return total
+    end
+  end
+  
+  def show_hand(hand=@hand)
+    print '[' 
+    hand.map {|card|
+      case card
+      when 1 then
+        print 'A, '
+      when 11 then
+        print 'J, '
+      when 12 then
+        print 'Q, '
+      when 13 then
+        print 'K, '
+      else
+        print card.to_s + ', '
+      end
+    }
+    print ']'
+  end
+
 end
 
-def deal_card(deck)
-	card = deck.sample
-	deck.delete_at(deck.find_index(card))
-	return card
+class Dealer < HandOfCards
+  def deck
+    @@deck
+  end
+
+  def initializer_deck(deck_number)
+    card_list = [*(1..13)]
+    @@deck = card_list * 4 * deck_number
+  end
+
+  def show_first_hand
+    show_hand([@hand[0], '?'])
+  end
 end
 
-def evaluate_hand(hand)
-	total = [0,0] 
-	hand.each{|card|
-		if card > 10 then
-			total[0] += 10
-			total[1] += 10
-		elsif card == 1 then
-			total[0] += card
-			if total[1] + 11 < 22 then
-				total[1] += 11
-			else
-				total[1] += card
-			end
-		else
-			total[0] += card
-			total[1] += card
-		end
-	}
-	if total[0] > 21 then
-		return 'Bust'
-	elsif total.find_index(21) != nil then
-		return 'BJ'
-	elsif total[0] == total[1] || total[1] > 21 then
-		return [total[0]]
-	else
-		return total
-	end
-end
+class Player < HandOfCards
+  attr_accessor :bet
 
-def replace_picture(hand)
-	print '[' 
-	hand.map {|card|
-		case card
-		when 1 then
-			print 'A, '
-		when 11 then
-			print 'J, '
-		when 12 then
-			print 'Q, '
-		when 13 then
-			print 'K, '
-		else
-			print card.to_s + ', '
-		end
-	}
-	print ']'
-end
+  def win
+    return @bet
+  end
 
-deck_number = 3
-deck = initializer_deck(deck_number)
+  def win_bj
+    return (@bet * 1.5).floor
+  end
+end  
+
+BJ = 21
+HIT = 'h'
+STAND = 's'
+
+deck_number = 6
 
 tip = 100
+
 puts '----------'
 puts 'BLACK JACK'
 puts '----------'
 
+player = Player.new()
+dealer = Dealer.new()
+dealer.initializer_deck(deck_number)
+
 loop do
-	if tip < 1 then
-		puts 'Bankrupt!'
-		break
-	elsif deck.size < 100 then
-		deck = initializer_deck(deck_number)
-	end
+  if tip < 1 then
+    puts 'Bankrupt!'
+    break
+  elsif dealer.deck.size < 100 then
+    dealer.initializer_deck(deck_number)
+  end
 
-	puts
-	puts 'Next Game [Enter]'
-	gets
+  player.put_deck
+  puts
+  dealer.put_deck
 
-	puts 'Your tip: ' + tip.to_s
-	puts 'How much do you want to bet?'
+  puts
+  puts 'Next Game [Enter]'
+  gets
+  
+  puts 'Your tip: ' + tip.to_s
+  puts 'How much do you want to bet?'
 
-	while (input = gets.to_i) < 1 || input > tip
-		puts 'Please input again.'
-	end
+  while (input = gets.to_i) < 1 or input > tip
+    puts 'Please input again.'
+  end
 
-	bet = input
-	tip -= bet
-	
-	player_hand = Array.new
-	player_hand.push(deal_card(deck))
-	dealer_hand = Array.new
-	dealer_hand.push(deal_card(deck))
+  player.refresh_hand
+  dealer.refresh_hand
 
-	player_hand.push(deal_card(deck))
-	dealer_hand.push(deal_card(deck))
-	
-	player_hand_total = evaluate_hand(player_hand)
-	dealer_hand_total = evaluate_hand(dealer_hand)
+  player.bet = input
 
-	
-	if dealer_hand_total == 'BJ' then
-		print 'dealer hand: '
-		puts replace_picture(dealer_hand)	
-		puts 'Dealer Black Jack!'
-	else
-		print 'dealer hand: '
-		puts replace_picture([dealer_hand[0], '?'])
-	end
+  player.draw_a_card
+  dealer.draw_a_card
+  player.draw_a_card
+  dealer.draw_a_card
+  
+  print 'dealer hand: '
+  if dealer.evaluate_hand.max == BJ then
+    puts dealer.show_hand  
+    puts 'Dealer Black Jack!'
+  else
+    puts dealer.show_first_hand
+  end
 
-	print 'player hand: '
-	puts replace_picture(player_hand)
+  print 'player hand: '
+  puts player.show_hand
+  puts 'Player Black Jack!' if player.evaluate_hand.max == BJ
 
-	if player_hand_total == 'BJ' then
-		puts 'Player Black Jack!'
-	end
+  if dealer.evaluate_hand.max == BJ && player.evaluate_hand.max == BJ then
+    puts 'Draw'
+    next  
+  elsif dealer.evaluate_hand.max == BJ then
+    puts 'Dealer wins...'
+    tip -= player.bet
+    next
+  elsif player.evaluate_hand.max == BJ then
+    puts 'Player wins!'
+    tip += player.win_bj
+    next
+  end
+  
+  puts 'player total is ' + player.evaluate_hand.to_s
+  puts
 
-	if dealer_hand_total == 'BJ' && player_hand_total == 'BJ' then
-		puts 'Draw'
-		tip += bet
-		next	
-	elsif dealer_hand_total == 'BJ' then
-		puts 'Dealer wins...'
-		next
-	elsif player_hand_total == 'BJ' then
-		puts 'Player wins!'
-		tip += (bet * 2.5).floor
-		next
-	end
-	
-	puts 'player total is ' + player_hand_total.to_s
-	puts
+  loop do
+    puts 'Hit[h] or Stand[s]?'
+    input = gets.chomp
+    if input == HIT then
+      player.draw_a_card
+      print 'dealer hand: '
+      puts dealer.show_first_hand
+      print 'player hand: '
+      puts player.show_hand
+      puts 'player total is ' + player.evaluate_hand.to_s
+      puts
+      if player.evaluate_hand == 'Bust' then
+        puts 'Player Bust!'
+        puts 'Dealer wins...'
+        tip -= player.bet
+        break
+      end
+      break if player.evaluate_hand.max == BJ
+      next
+    end
+    break if input == STAND
+    puts 'Please select again.'
+  end
 
-	loop do
-		puts 'Hit[h] or Stand[s]?'
-		input = gets.chomp
-		if input == 'h' then
-			player_hand.push(deal_card(deck))
-			player_hand_total = evaluate_hand(player_hand)
-			if player_hand_total == 'BJ' then
-				print 'player hand: '
-				puts replace_picture(player_hand)
-				puts 'Player Black Jack!'
-				puts 'Player wins!'
-				tip += bet * 2
-				break
-			elsif player_hand_total == 'Bust' then
-				print 'player hand: '
-				puts replace_picture(player_hand)
-				puts 'Player Bust!'
-				puts 'Dealer wins...'
-				break
-			end
-			print 'dealer hand: '
-			puts replace_picture([dealer_hand[0], '?'])
-			print 'player hand: '
-			puts replace_picture(player_hand)
-			puts 'player total is ' + player_hand_total.to_s
-			puts
-		elsif input == 's' then
-			print 'dealer hand: '
-			puts replace_picture(dealer_hand)
-			loop do
-				if dealer_hand_total == 'BJ' then
-					puts 'Dealer Black Jack!'
-					puts 'Dealer wins...'
-					break
-				elsif dealer_hand_total == 'Bust' then
-					puts 'Dealer Bust!'
-					puts 'Player wins!'
-					tip += bet * 2
-					break
-				else
-					if dealer_hand_total[-1] > 16 then
-						puts 'dealer total is ' + dealer_hand_total[-1].to_s
-						if player_hand_total[-1] > dealer_hand_total[-1] then
-							puts 'Player wins!'
-							tip += bet * 2
-						elsif player_hand_total[-1] < dealer_hand_total[-1] then
-							puts 'Dealer wins...'
-						else
-							puts 'Draw'
-							tip += bet
-						end
-						break
-					end
-				end
-				dealer_hand.push(deal_card(deck))
-				print 'dealer hand: '
-				puts replace_picture(dealer_hand)
-				dealer_hand_total = evaluate_hand(dealer_hand)
-			end
-			break
-		else
-			puts 'Please select again.'
-		end
-	end
+  next if player.evaluate_hand == 'Bust'
+
+  loop do
+    print 'dealer hand: '
+    puts dealer.show_hand
+
+    if dealer.evaluate_hand == 'Bust' then
+      puts 'Dealer Bust!'
+      puts 'Player wins!'
+      tip += player.win
+      break
+    elsif dealer.evaluate_hand.max > 16 then
+      puts 'dealer total is ' + dealer.evaluate_hand.max.to_s
+      if player.evaluate_hand.max > dealer.evaluate_hand.max then
+        puts 'Player wins!'
+        tip += player.win
+      elsif player.evaluate_hand.max < dealer.evaluate_hand.max then
+        puts 'Dealer wins...'
+        tip -= player.bet
+      else
+        puts 'Draw'
+      end
+      break
+    end
+
+    dealer.draw_a_card
+  end
 end
